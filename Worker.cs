@@ -9,6 +9,7 @@ using RabbitMQ.Client.Events;
 
 public class Worker : BackgroundService
 {
+    private const string _queueName = "MyQueue";
     private readonly TimeSpan _stoppingCheckInterval = TimeSpan.FromSeconds(5);
     private readonly ILogger<Worker> _logger;
     private readonly IConnection _connection;
@@ -29,10 +30,12 @@ public class Worker : BackgroundService
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
+        _channel.QueueDeclare(_queueName, true, true);
+
         _consumer = new EventingBasicConsumer(_channel);
         _consumer.Received += ReceivedHandler;
 
-        _consumerTag = _channel.BasicConsume("MyQueue", false, _consumer);
+        _consumerTag = _channel.BasicConsume(_queueName, false, _consumer);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
